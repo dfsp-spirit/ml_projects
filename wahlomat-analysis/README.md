@@ -6,7 +6,7 @@ This directory contains some python3 script to perform some basic analyses of th
 
 ## What is Wahl-o-mat?
 
-A number of statements about important topics are given to all political parties before elections, and the parties can provide whether they agree or disagree with each statement (they can also say they do not have an opinion on it). People who use the Wahl-o-mat also answer the statements, and can then compare their own answers to those given by the parties.
+A number of statements about important topics are given to all political parties before elections, and the parties can provide whether they agree or disagree with each statement (they can also say neutral). People who use the Wahl-o-mat also answer the statements, and can then compare their own answers to those given by the parties.
 
 ## Where does the data come from?
 
@@ -18,6 +18,11 @@ They perform cluster analysis to compute a similarity between the parties (two p
 
 Here is an example:
 ![Clustering](./clustering_parties_statements.png?raw=true "Clustering of parties and statements for Europawahl 2019 in Germany")
+
+The colors mean:
+* Red: party disagreed with statement
+* Green: party agreed
+* Gray: neutral
 
 ## What does this tell me?
 

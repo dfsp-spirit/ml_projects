@@ -14,6 +14,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
 
 def wahlomat_analysis():
     merged_df, all_data, raw_data = load_data()
@@ -49,6 +51,9 @@ def wahlomat_analysis():
     g.fig.suptitle('Clustering von Parteien nach ihren Antworten auf Wahlomat-Fragen')
     #g.set_axis_labels(['x label', 'y label'])
     #g.set(xlabel='my x label', ylabel='my y label')
+    #plt.tight_layout(False)
+    plt.savefig("test.png", bbox_inches='tight')
+
     plt.show()
 
     #kmeans = KMeans(n_clusters=2, random_state=0).fit(answers)

@@ -18,3 +18,13 @@ They perform cluster analysis to compute a similarity between the parties (two p
 
 Here is an example:
 ![Clustering](./clustering_parties_statements.png?raw=true "Clustering of parties and statements for Europawahl 2019 in Germany")
+
+## What does this tell me?
+
+For a small party which you do not know much about, you can see how close its answers were to those from other parties you know. You can also see how similar the answers of a number of parties are to each other.
+
+## Limits
+
+Of course, the Wahl-o-mat idea is not without issues, and this analysis adds some more.
+
+The statements force parties to answer complex political questions with yes or no, and the questions themselves may be biased. And of course, two parties can give the same answer for entirely different reasons. So take this with a grain of salt and at least read the comments from the parties, which are also available in the data. In these comments, they explain *why* they answered in a certain way.

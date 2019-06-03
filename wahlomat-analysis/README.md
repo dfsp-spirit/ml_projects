@@ -14,19 +14,30 @@ The script `get_data.bash` retrieves them from the [qual-o-mat-data repository b
 
 ## What do the scripts do?
 
-They perform cluster analysis to compute a similarity between the parties (two parties are considered similar when they agree on many statements) and the statements (two statements are similar if the pattern of answers to them by the parties are similar).
+They perform cluster analysis to compute a similarity between the parties (two parties are considered similar when they answered to the statements in a similar way) and the statements (two statements are similar if the pattern of answers to them by the parties are similar).
 
-Here is an example:
-![Clustering](./clustering_parties_statements.png?raw=true "Clustering of parties and statements for Europawahl 2019 in Germany")
+Here is an example for Europawahl 2019 in Germany:
+
 
 The colors mean:
 * Red: party disagreed with statement
 * Green: party agreed
 * Gray: neutral
 
+![Clustering](./clustering_parties_statements.png?raw=true "Clustering of parties and statements for Europawahl 2019 in Germany")
+
+
 ## What does this tell me?
 
-For a small party which you do not know much about, you can see how close its answers were to those from other parties you know. You can also see how similar the answers of a number of parties are to each other.
+**How to read the image:** Note that to see the similarities, what you should look at are the cluster dendrograms (on the left for the parties, and at the top for the statements), not at the ordering of parties! (E.g., the answers of the *FDP* are way more similar to *Die Humanisten* than to *Bündnis C.*, even though it is adjacent to *Bündnis C* in the ordering.)
+
+One can use the image to position parties by their answers, or to find blocks of similar parties:
+
+* For a small party which you do not know much about, you can see how close its answers were to those from other parties you know. E.g., one can see that the answers of *Volksabstimmung* are most similar to those given by the right-wing extremist party NPD, and that the answers given by *Ökolinx* are most similar to those given by *Die Linke*.
+
+* You can also see how similar the answers of a number of parties are to each other. For example, there is a large block of left-wing parties (in the lower third of the figure) which have given very similar answers to most questions.
+
+* You can see which parties are specialist parties that only care for certain topics. E.g., *Gesundheitsforschung* gave a neutral answer to all statements except the one concerning animal experiments.
 
 ## Limits
 

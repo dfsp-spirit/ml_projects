@@ -16,8 +16,8 @@ import errno
 
 def get_abide():
     local_base_dir = "./abide_data/"
-    required_files_relative_to_subject_dir = ["surf/lh.white", "surf/rh.white", "surf/notthere"]
-    #required_files_relative_to_subject_dir = get_fs_subject_filenames()
+    #required_files_relative_to_subject_dir = ["surf/lh.white", "surf/rh.white", "surf/notthere"]
+    required_files_relative_to_subject_dir = get_fs_subject_filenames()
 
     print("Downloading ABIDE I structural data to local directory '%s'." % (local_base_dir))
     print("Will download %d files per subject." % (len(required_files_relative_to_subject_dir)))
@@ -65,6 +65,8 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
     md = load_abide_metadata()
     file_ids = md['FILE_ID']
 
+    #file_ids = pd.Series(["Pitt_0050003", "Pitt_0050004", "Pitt_0050005"])
+
     num_ids = len(file_ids)
     num_files_total = (num_ids * len(required_files_relative_to_subject_dir))
     if verbose:
@@ -74,6 +76,7 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
 
     ok_files = []
     error_files = []
+    error_full_urls = []
     error_messages = []
 
     for idx, fid in file_ids.items():
@@ -90,9 +93,10 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
             file_name = fparts[-1]
             if len(fparts) > 1:
                 extra_dirs = fparts[0:-1]
-            code, msg = download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir)
+            code, full_url, msg = download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir)
             if code != 0:
                 error_files.append(fpath)
+                error_full_urls.append(full_url)
                 error_messages.append(msg)
             else:
                 ok_files.append(fpath)
@@ -103,7 +107,7 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
     if error_files:
         print("Encountered problems with %d of the %d files:" % (len(error_files), num_files_total))
         for idx, fname in enumerate(error_files):
-            print("%s : '%s'" % (error_files[idx], error_messages[idx]))
+            print("file %s : url '%s' : error '%s'" % (error_files[idx], error_full_urls[idx], error_messages[idx]))
 
 
 def download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir):
@@ -123,10 +127,10 @@ def download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir):
         with urllib.request.urlopen(full_url) as response, open(local_file, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
     except urllib.error.HTTPError as h_err:
-        return 1, str(h_err.code)
+        return 1, full_url, str(h_err.code)
     except urllib.error.URLError as u_err:
-        return 1, str(u_err.reason)
-    return 0, ""
+        return 1, full_url, str(u_err.reason)
+    return 0, full_url, ""
 
 
 def load_abide_metadata():

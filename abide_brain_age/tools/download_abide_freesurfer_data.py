@@ -11,6 +11,8 @@ import urllib.request
 import urllib.error
 import shutil
 import errno
+from multiprocessing.dummy import Pool
+from urllib.request import urlretrieve
 # Download the file from `url` and save it locally under `file_name`:
 from os.path import expanduser
 
@@ -23,7 +25,7 @@ def get_abide():
     for file_idx, file in enumerate(required_files_relative_to_subject_dir):
         print("%d: %s" % (file_idx+1, file))
 
-    diagnose_output("............................................ssssss......ssssss......ssssss......ssssss......ssssss......ssssss", required_files_relative_to_subject_dir)
+    #diagnose_output("............................................ssssss......ssssss......ssssss......ssssss......ssssss......ssssss", required_files_relative_to_subject_dir)
 
     print("Downloading ABIDE I structural data to local directory '%s'." % (local_base_dir))
     print("Will download %d files per subject." % (len(required_files_relative_to_subject_dir)))
@@ -42,15 +44,18 @@ def get_fs_subject_filenames():
     files = files + _get_surf_both_hemi_fsaverge_mappings(["area", "area.pial", "sulc", "thickness", "curv", "volume"])
     return files
 
+
 def diagnose_output(out_str, files):
     for idx, c in enumerate(out_str):
         if c != ".":
             print("%s: %s" % (c, files[idx]))
 
+
 def _get_both_hemi_files_in_dir(subdir, file_list):
     files_lh = [("%s/lh.%s" % (subdir, f)) for f in file_list]
     files_rh = [("%s/rh.%s" % (subdir, f)) for f in file_list]
     return files_lh + files_rh
+
 
 def _get_files_in_subdir(subdir, file_list):
     return [("%s/%s" % (subdir, f)) for f in file_list]
@@ -83,19 +88,17 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
         print("Received meta data on %d subjects. Will download %d * %d = %d files in total." % (num_ids, num_ids, len(required_files_relative_to_subject_dir), num_files_total))
 
     base_url = "https://s3.amazonaws.com/fcp-indi/data/Projects/ABIDE_Initiative/Outputs/freesurfer/5.1/"
-    ok_files = []
-    error_files = []
-    error_full_urls = []
-    error_messages = []
-    skipped_files = []
+    ok_files = dict()
+    error_files = dict()
+    skipped_files = dict()
+
+    url_tuples = list()
+
+    num_in_parallel = 8
 
     for idx, fid in file_ids.items():
         if fid == "no_filename":
             continue
-        if idx % 10 == 0:
-            print("At subject number %d of %d: encountered problems with %d of %d files so far, skipped %d." % (idx, num_ids, len(error_files), len(error_files) + len(ok_files), len(skipped_files)))
-        if verbose:
-            print("[%s]" % (fid), end="", flush=True)
         for fpath in required_files_relative_to_subject_dir:
             fpath = fid + "/" + fpath
             fparts = fpath.split("/")
@@ -103,35 +106,46 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
             file_name = fparts[-1]
             if len(fparts) > 1:
                 extra_dirs = fparts[0:-1]
-            code, full_url, msg = download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir, skip_existing=skip_existing)
-            if code == 1:
-                error_files.append(fpath)
-                error_full_urls.append(full_url)
-                error_messages.append(msg)
-                if verbose:
-                    print("E", end="", flush=True)
-            elif code == -1:
-                skipped_files.append(fpath)
-                if verbose:
-                    print("s", end="", flush=True)
-            elif code == 0:
-                ok_files.append(fpath)
-                if verbose:
-                    print(".", end="", flush=True)
-            else:
-                print("Unhandled return code received from download function, exiting.")
-                sys.exit(1)
+            url_tuple = (base_url, extra_dirs, file_name, local_base_dir, skip_existing, ok_files, error_files, skipped_files, verbose)
+            url_tuples.append(url_tuple)
 
         if verbose:
             print("")
-    if error_files:
-        print("Encountered problems with %d of the %d files:" % (len(error_files), num_files_total))
-        for idx, fname in enumerate(error_files):
-            print("-error file %s : url '%s' : error '%s'" % (error_files[idx], error_full_urls[idx], error_messages[idx]))
-    if skipped_files:
-        print("Skipped %d of the %d files:" % (len(skipped_files), num_files_total))
-        for idx, fname in enumerate(skipped_files):
-            print("-skipped file %s" % (skipped_files[idx]))
+
+    print("Downloading %d files in parallel using %d threads." % (num_files_total, num_in_parallel))
+    Pool(num_in_parallel).map(retrieve_url, url_tuples)
+    print("Download finished.")
+
+    if len(error_files.keys()):
+        print("Encountered problems with %d of the %d files:" % (len(error_files.keys()), num_files_total))
+        for k in error_files.keys():
+            print("-error url '%s' : '%s'" % (k, error_files[k]))
+    if len(skipped_files.keys()):
+        print("Skipped %d of the %d files:" % (len(skipped_files.keys()), num_files_total))
+        for k in skipped_files.keys():
+            print("-skipped file %s" % (k, skipped_files[k]))
+    print("All done: handled %s URLs in total (%d in parallel). Result: %d OK, %d skipped, %d failed." % (num_files_total, num_in_parallel, len(ok_files.keys()), len(skipped_files.keys()), len(error_files.keys())))
+    print("Check local directory '%s' for downloaded files. Exiting." % (local_base_dir))
+
+
+def retrieve_url(arg_tuple):
+    base_url, extra_dirs, file_name, local_base_dir, skip_existing, ok_files, error_files, skipped_files, verbose = arg_tuple
+    code, full_url, msg = download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir, skip_existing=skip_existing)
+
+    if code == 1:
+        error_files[full_url] = msg
+        print("E: %s" % (full_url), flush=True)
+    elif code == -1:
+        skipped_files[full_url] = msg
+        if verbose:
+            print("S: %s" % (full_url), flush=True)
+    elif code == 0:
+        ok_files[full_url] = msg
+        if verbose:
+            print("K: %s" % (full_url), flush=True)
+    else:
+        error_files[full_url] = "Unhandled exception: '%s'" % (msg)
+        print("EE: %s" % (full_url), flush=True)
 
 
 def download_file_to_local_dir(base_url, extra_dirs, file_name, local_base_dir, skip_existing=False):

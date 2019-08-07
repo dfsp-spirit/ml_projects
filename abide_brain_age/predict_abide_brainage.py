@@ -22,7 +22,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def predict_abide_brain_age():
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     #logging.basicConfig(level=logging.INFO)
 
     ################ Specify data files and load data ####################
@@ -96,18 +96,18 @@ def predict_abide_brain_age():
 
     logging.info("Preparing classifiers.")
     # Test a number of classifiers
-    names = ["Linear SVM", "RBF SVM", "Gaussian Process",
+    names = ["KNN", "Linear SVM", "RBF SVM", "Gaussian Process",
          "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
          "Naive Bayes", "QDA"]
 
     classifiers = [
-    #KNeighborsClassifier(3),
+    KNeighborsClassifier(3),
     SVC(kernel="linear", C=0.025),
     SVC(gamma=2, C=1),
     GaussianProcessClassifier(1.0 * RBF(1.0)),
     DecisionTreeClassifier(max_depth=5),
     RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    MLPClassifier(alpha=1, max_iter=1000),
+    MLPClassifier(alpha=1, max_iter=2000),
     AdaBoostClassifier(),
     GaussianNB(),
     QuadraticDiscriminantAnalysis()]
@@ -115,10 +115,12 @@ def predict_abide_brain_age():
     for name, clf in zip(names, classifiers):
         logging.info("Fitting classifier '%s' to training set." % (name))
         clf.fit(X_train, y_train)
-        logging.info("Evaluating classifier '%s' on test set." % (name))
+        logging.info("  Evaluating classifier '%s' on test set." % (name))
         score = clf.score(X_test, y_test)
-        logging.info("Classifier %s achieved score: %f" % (name, score))
-
+        logging.info("  Classifier %s achieved score: %f" % (name, score))
+        logging.info("  Predicting for some observations from test set (true labels are: %d and %d):" % (y_test.iloc[0], y_test.iloc[1]))
+        pred = clf.predict([X_test[0,:], X_test[1,:]])
+        logging.info("    %d %d" % (pred[0], pred[1]))
 
 
     logging.info("Done, exiting.")

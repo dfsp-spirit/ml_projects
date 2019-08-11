@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import logging
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
@@ -152,12 +153,21 @@ def compare_classifiers(data):
     for name, clf in zip(classifier_names, classifiers):
         logging.info("Fitting classifier '%s' to training set." % (name))
         clf.fit(X_train, y_train)
+
+        kfold = 3
+        logging.info("  Performing %d fold cross validation" % (kfold))
+        cv_scores = cross_val_score(clf, X_train, y_train, cv=kfold, scoring="accuracy")
+        logging.info("  Cross validation scores:")
+        for k in range(kfold):
+            logging.info("    %f" % (cv_scores[k]))
+
         logging.info("  Evaluating classifier '%s' on test set." % (name))
         score = clf.score(X_test, y_test)
         logging.info("  Classifier %s achieved score: %f" % (name, score))
         logging.info("  Predicting using %s for some observations from test set (true labels are: %d %d %d %d %d):" % (name, y_test.iloc[0], y_test.iloc[1], y_test.iloc[2], y_test.iloc[3], y_test.iloc[4]))
         pred = clf.predict([X_test[0,:], X_test[1,:], X_test[2,:], X_test[3,:], X_test[4,:]])
         logging.info("    %d %d %d %d %d" % (pred[0], pred[1], pred[2], pred[3], pred[4]))
+
 
 
     logging.info("Classifier comparison done.")

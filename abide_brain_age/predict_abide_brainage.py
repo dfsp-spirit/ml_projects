@@ -21,6 +21,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score
 
 
 def predict_abide_brain_age():
@@ -97,13 +98,16 @@ def preproc_data(descriptors, metadata, labels):
     logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
     logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
 
-    logging.info("Running dimensionality reduction.")
+    logging.info("Running dimensionality reduction (PCA).")
     pca = PCA()
     X_train = pca.fit_transform(X_train)
     X_test = pca.transform(X_test)
 
-    logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
-    logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    for pc in range(10):
+        logging.info("  PCA principal component #%d explained variance: %f" % (pc, pca.explained_variance_ratio_[pc]))
+
+    logging.debug("After PCA: Training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("After PCA: Sescriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
 
     return X_train, X_test, y_train, y_test
 
@@ -154,6 +158,7 @@ def compare_classifiers(data):
         logging.info("  Predicting using %s for some observations from test set (true labels are: %d %d %d %d %d):" % (name, y_test.iloc[0], y_test.iloc[1], y_test.iloc[2], y_test.iloc[3], y_test.iloc[4]))
         pred = clf.predict([X_test[0,:], X_test[1,:], X_test[2,:], X_test[3,:], X_test[4,:]])
         logging.info("    %d %d %d %d %d" % (pred[0], pred[1], pred[2], pred[3], pred[4]))
+
 
     logging.info("Classifier comparison done.")
 

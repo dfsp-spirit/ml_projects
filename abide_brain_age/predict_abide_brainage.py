@@ -1,3 +1,4 @@
+
 import os
 import numpy as np
 import pandas as pd
@@ -19,10 +20,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+
 
 def predict_abide_brain_age():
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     ################ Specify data files and load data ####################
 
@@ -93,6 +96,15 @@ def preproc_data(descriptors, metadata, labels):
 
     logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
     logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+
+    logging.info("Running dimensionality reduction.")
+    pca = PCA()
+    X_train = pca.fit_transform(X_train)
+    X_test = pca.transform(X_test)
+
+    logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+
     return X_train, X_test, y_train, y_test
 
 

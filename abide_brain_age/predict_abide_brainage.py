@@ -33,13 +33,14 @@ def predict_abide_brain_age():
 
     logging.info("Loading data.")
     descriptors, metadata = load_data(descriptors_file, subjects_file, metadata_file)
+    X_train, X_test, y_train, y_test = preproc_data(descriptors, metadata)
+    data = (X_train, X_test, y_train, y_test)
+    check_data(data)
+    compare_classifiers(data)
 
 
-    ################# Prepare data ####################
-
+def preproc_data(descriptors, metadata):
     logging.info("Scaling data, creating training and test sets.")
-
-
 
     numeric_features = list(descriptors.columns) # set to list of all column names from current dataframe
 
@@ -86,14 +87,20 @@ def predict_abide_brain_age():
 
     logging.info("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
     logging.info("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    return X_train, X_test, y_train, y_test
 
+
+
+def check_data(data):
+    X_train, X_test, y_train, y_test = data
     num_features_train = X_train.shape[1]
     num_features_test = X_test.shape[1]
     if num_features_train != num_features_test:
         logging.error("Mismatch between descriptor count in training and test data: %d versus %d. There may be categorical columns which lack column values in one of the two sets." % (num_features_train, num_features_test))
 
-    ################ Start Classification ###################
 
+def compare_classifiers(data):
+    X_train, X_test, y_train, y_test = data
     logging.info("Preparing classifiers.")
     # Test a number of classifiers
     names = ["KNN", "Linear SVM", "RBF SVM", "Gaussian Process",

@@ -95,8 +95,8 @@ def preproc_data(descriptors, metadata, labels):
     X_train = preprocessor.fit_transform(X_train)
     X_test = preprocessor.fit_transform(X_test)
 
-    logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
-    logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    logging.debug("After pre-proc: Training data shape is %s, with %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("After pre-proc: Test data shape is %s, with %d labels for it." % (str(X_test.shape), y_test.shape[0]))
 
     logging.info("Running dimensionality reduction (PCA).")
     pca = PCA()
@@ -106,8 +106,8 @@ def preproc_data(descriptors, metadata, labels):
     for pc in range(10):
         logging.info("  PCA principal component #%d explained variance: %f" % (pc, pca.explained_variance_ratio_[pc]))
 
-    logging.debug("After PCA: Training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
-    logging.debug("After PCA: Sescriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    logging.debug("After PCA: Training data shape is %s, with %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("After PCA: Test data shape is %s, with %d labels for it." % (str(X_test.shape), y_test.shape[0]))
 
     return X_train, X_test, y_train, y_test
 

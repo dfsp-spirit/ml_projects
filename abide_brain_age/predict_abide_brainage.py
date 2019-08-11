@@ -23,7 +23,6 @@ from sklearn.preprocessing import MinMaxScaler
 def predict_abide_brain_age():
 
     logging.basicConfig(level=logging.INFO)
-    #logging.basicConfig(level=logging.INFO)
 
     ################ Specify data files and load data ####################
 
@@ -33,14 +32,22 @@ def predict_abide_brain_age():
 
     logging.info("Loading data.")
     descriptors, metadata = load_data(descriptors_file, subjects_file, metadata_file)
-    X_train, X_test, y_train, y_test = preproc_data(descriptors, metadata)
+
+    labels = metadata["DX_GROUP"]
+    X_train, X_test, y_train, y_test = preproc_data(descriptors, metadata, labels)
     data = (X_train, X_test, y_train, y_test)
     check_data(data)
     compare_classifiers(data)
 
 
-def preproc_data(descriptors, metadata):
+def preproc_data(descriptors, metadata, labels):
     logging.info("Scaling data, creating training and test sets.")
+
+    if descriptors.shape[0] != metadata.shape[0]:
+        logging.error("Mismatch in size of descriptors and metadata: %d versus %d, but both should be for the same number of observations/subjects." % (descriptors.shape[0], metadata.shape[0]))
+
+    if descriptors.shape[0] != labels.shape[0]:
+        logging.error("Mismatch in size of descriptors and labels: %d versus %d, but both should be for the same number of observations/subjects." % (descriptors.shape[0], labels.shape[0]))
 
     numeric_features = list(descriptors.columns) # set to list of all column names from current dataframe
 
@@ -65,7 +72,7 @@ def preproc_data(descriptors, metadata):
         descriptors[cov] = metadata[cov]
     categorical_features = categorical_covariates   # The only categorial features in the dataframe are the covariates we just added.
 
-    features_to_be_removed = [] # No need to drop stuff so far.
+    features_to_be_removed = [] # No need to drop stuff so far. (Most important: the label is not part of the descriptors, as it comes from the metadata. So no need to remove the label.)
 
     preprocessor = ColumnTransformer(
     remainder = 'passthrough',
@@ -76,22 +83,24 @@ def preproc_data(descriptors, metadata):
     ])
 
     # prepare data for classification task:
-    labels = metadata["DX_GROUP"]
     X_train, X_test, y_train, y_test = train_test_split(descriptors, labels, test_size=.4, random_state=42)
 
-    logging.info("Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
-    logging.info("Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    logging.debug("Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
 
     X_train = preprocessor.fit_transform(X_train)
     X_test = preprocessor.fit_transform(X_test)
 
-    logging.info("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
-    logging.info("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
+    logging.debug("After pre-proc: Received training data: descriptor shape is %s, and %d labels for it." % (str(X_train.shape), y_train.shape[0]))
+    logging.debug("After pre-proc: Received test data: descriptor shape is %s, and %d labels for it." % (str(X_test.shape), y_test.shape[0]))
     return X_train, X_test, y_train, y_test
 
 
 
 def check_data(data):
+    """
+    Check whether the number of descriptors in the training and test data is equal. If not, the one-hot-encoding of categorial features may have caused issues (i.e., some values occur only in the training data or only in the test data).
+    """
     X_train, X_test, y_train, y_test = data
     num_features_train = X_train.shape[1]
     num_features_test = X_test.shape[1]
@@ -100,12 +109,17 @@ def check_data(data):
 
 
 def compare_classifiers(data):
+    """
+    Quick comparison of different classifiers with hard-coded parameters (no parameter optimization). This is only useful to get a very rough first impression of the performance of the different classifiers.
+    """
     X_train, X_test, y_train, y_test = data
-    logging.info("Preparing classifiers.")
+
     # Test a number of classifiers
-    names = ["KNN", "Linear SVM", "RBF SVM", "Gaussian Process",
+    classifier_names = ["KNN", "Linear SVM", "RBF SVM", "Gaussian Process",
          "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
          "Naive Bayes", "QDA"]
+
+    logging.info("Preparing %d different classifiers." % (len(classifier_names)))
 
     classifiers = [
     KNeighborsClassifier(3),
@@ -119,18 +133,17 @@ def compare_classifiers(data):
     GaussianNB(),
     QuadraticDiscriminantAnalysis()]
 
-    for name, clf in zip(names, classifiers):
+    for name, clf in zip(classifier_names, classifiers):
         logging.info("Fitting classifier '%s' to training set." % (name))
         clf.fit(X_train, y_train)
         logging.info("  Evaluating classifier '%s' on test set." % (name))
         score = clf.score(X_test, y_test)
         logging.info("  Classifier %s achieved score: %f" % (name, score))
-        logging.info("  Predicting for some observations from test set (true labels are: %d and %d):" % (y_test.iloc[0], y_test.iloc[1]))
-        pred = clf.predict([X_test[0,:], X_test[1,:]])
-        logging.info("    %d %d" % (pred[0], pred[1]))
+        logging.info("  Predicting using %s for some observations from test set (true labels are: %d %d %d %d %d):" % (name, y_test.iloc[0], y_test.iloc[1], y_test.iloc[2], y_test.iloc[3], y_test.iloc[4]))
+        pred = clf.predict([X_test[0,:], X_test[1,:], X_test[2,:], X_test[3,:], X_test[4,:]])
+        logging.info("    %d %d %d %d %d" % (pred[0], pred[1], pred[2], pred[3], pred[4]))
 
-
-    logging.info("Done, exiting.")
+    logging.info("Classifier comparison done.")
 
 
 
@@ -148,6 +161,14 @@ def load_data(descriptors_file, subjects_file, metadata_file):
 
     metadata_file: str
         Path to metadata CSV file from ABIDE data. The required file is named 'Phenotypic_V1_0b_preprocessed1.csv' when downloaded from ABIDE.
+
+    Returns
+    -------
+    descriptors: dataframe
+        Dataframe containing descriptor data, one subject per row.
+
+    metadata: dataframe
+        Dataframe containing metadata, one subject per row.
     """
     logging.info("Reading brain descriptor data from file '%s', subject order from file '%s'." % (descriptors_file, subjects_file))
 
@@ -177,8 +198,6 @@ def load_data(descriptors_file, subjects_file, metadata_file):
     filtered_metadata = pd.merge(subjects, metadata, how='left', left_on="subject_id", right_on="FILE_ID")
     logging.debug("Filtered metadata shape after removing subjects which we have no descriptor data on: %s" % (str(filtered_metadata.shape)))
     return descriptors, filtered_metadata
-
-
 
 
 

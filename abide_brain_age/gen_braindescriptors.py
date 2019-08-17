@@ -20,15 +20,33 @@ def run_desc():
     bdi = bd.BrainDescriptors(subjects_dir, subjects_list)
     bdi.add_parcellation_stats(['aparc', 'aparc.a2009s'])
     bdi.add_segmentation_stats(['aseg'])
+    #bdi.add_custom_measure_stats(['aparc'], ['area'])
     bdi.add_custom_measure_stats(['aparc', 'aparc.a2009s'], ['area', 'area.pial', 'curv', 'curv.pial', 'jacobian_white', 'sulc', 'thickness', 'truncation', 'volume'])
 
     #bdi.report_descriptors()
 
     bdi._check_for_duplicate_descriptor_names()
+    subjects_over_threshold, descriptors_over_threshold, nan_share_per_subject, nan_share_per_descriptor= bdi.check_for_NaNs()
+
+    do_plot_nans = False
+    if do_plot_nans:
+        plot_hist(nan_share_per_subject, "NaN share per subject")
+        plot_hist(nan_share_per_descriptor, "NaN share per descriptor")
+
     data_output_file = "braindescriptors.csv"
     subjects_output_file="subjects.txt"
     bdi.save(data_output_file, subjects_file=subjects_output_file)
     logging.info("Saved values of %d descriptors for each of the %d subjects to file '%s'. Subject order for data written to file '%s'." % (len(bdi.descriptor_names), len(bdi.subjects_list), data_output_file, subjects_output_file))
+
+
+def plot_hist(data, title):
+    import matplotlib.pyplot as plt
+    n, bins, patches = plt.hist(data, 50, density=True, facecolor='g', alpha=0.75)
+    plt.xlabel('NaN share')
+    plt.ylabel('Frequency')
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
 
 
 if __name__ == "__main__":

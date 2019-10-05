@@ -5,6 +5,8 @@ from keras.models import Sequential
 from keras.layers import Dense
 from abide_data import preproc_data, load_data
 
+APPTAG = "[ABD_KRS] "
+
 def run_nn():
 
     logging.basicConfig(level=logging.DEBUG)
@@ -16,7 +18,7 @@ def run_nn():
     subjects_file = os.path.join(data_path, "subjects.txt")
     metadata_file = os.path.join(data_path, "tools", "Phenotypic_V1_0b_preprocessed1.csv")
 
-    logging.info("Loading data.")
+    logging.info(APPTAG + "Loading data.")
     descriptors, metadata = load_data(descriptors_file, subjects_file, metadata_file)
 
     labels = metadata["DX_GROUP"]
@@ -27,13 +29,15 @@ def run_nn():
     model = Sequential()
     model.add(Dense(units=64, activation='relu', input_dim=input_dim))
     model.add(Dense(units=10, activation='softmax'))
-    model.compile(loss='sparse_categorical_crossentropy',
-                  optimizer='sgd',
-                  metrics=['accuracy'])
 
-    model.fit(X_train, y_train, epochs=5, batch_size=32)
-    loss_and_metrics = model.evaluate(X_test, y_test, batch_size=128)
+    model.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    model.fit(X_train, y_train, epochs=60, batch_size=32)
+
+    loss_and_metrics = model.evaluate(X_test, y_test, batch_size=32)
+    
     print(model.metrics_names)
+    print(loss_and_metrics)
 
     print("Predicting classes.")
     classes = model.predict(X_test, batch_size=128)

@@ -16,7 +16,7 @@ def get_dm_subjects(metadata_file):
     rd.to_csv('subjects_diMarino.csv', index=False, header=False)
     print("Checking %d subjects total." % (full_df.shape[0]))
     print("Found %d subjects from diMartino study, %d of them had a structural data dir." % (required_subjects_df.shape[0], required_subjects_with_files_df.shape[0]))
-    print("Subjects file 'subjects_diMarino.csv' written.")
+    print("Subjects file 'subjects_diMartino.csv' written.")
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ def get_fs_subject_filenames():
     files = files + _get_both_hemi_files_in_dir("stats", ["aparc.stats", "aparc.a2009s.stats"])     # atlas stats. Note: "aparc.DKTatlas.stats" is not available for ABIDE
     files = files + _get_files_in_subdir("stats", ["aseg.stats"])   # segmenatation stats, not hemi dependent
     files = files + _get_both_hemi_files_in_dir("label", ["aparc.annot", "aparc.a2009s.annot", "cortex.label"])     # brain surface parcellations for standard atlases and other labels
-    files = files + _get_files_in_subdir("mri", ["brain.mgz", "brainmask.mgz", "orig.mgz", "T1.mgz", "aseg.mgz"])   # volumes
+    files = files + _get_files_in_subdir("mri", ["brain.mgz", "brainmask.mgz", "orig.mgz", "T1.mgz", "aseg.mgz", "wm.mgz"])   # volumes
     files = files + _get_files_in_subdir("mri/transforms", ["talairach.m3z", "talairach.xfm"])  # transformation matrices to convert between different spaces
     return files
 

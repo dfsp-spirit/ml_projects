@@ -21,6 +21,7 @@ from os.path import expanduser
 def get_abide():
     parser = argparse.ArgumentParser(description="Download ABIDE structural data, preprocessed with FreeSurfer pipeline.")
     parser.add_argument("target_dir", help="The target download directory. This dir will contain all the subject directories. You may want to create a new, empty dir for this.")
+    parser.add_argument("-s", "--download-single-file", help="Download only the given single file for each subject (given relative to the subject's dir, e.g., 'surf/lh.truncation').", default=None)
     parser.add_argument("-n", "--num-files-parallel", help="How many files to download in parallel. Defaults to 10.", default="10")
     parser.add_argument("-r", "--re-download", help="Whether to re-download existing files. Defaults to FALSE if omitted, which means that existing files will be kept.", action="store_true")
     parser.add_argument("-v", "--verbose", help="Whether to print more detailed information while downloading. Defaults to false if omitted.", action="store_true")
@@ -30,13 +31,18 @@ def get_abide():
     skip_existing = not args.re_download
 
     local_base_dir = args.target_dir
-    required_files_relative_to_subject_dir = get_fs_subject_filenames()
+
+    if args.download_single_file is not None:
+        required_files_relative_to_subject_dir = [args.download_single_file]
+    else:
+        required_files_relative_to_subject_dir = get_fs_subject_filenames()
 
     print("Downloading ABIDE I structural data to local directory '%s'." % (local_base_dir), flush=True)
     print("Will download %d files in parallel. skip_existing is set to %s." % (num_in_parallel, str(skip_existing)), flush=True)
-    print("Will download %d files per subject:" % (len(required_files_relative_to_subject_dir)), flush=True)
+    print("Will download %d files per subject." % (len(required_files_relative_to_subject_dir)), flush=True)
 
     if args.verbose:
+        print("    List of files per subject:")
         for file_idx, file in enumerate(required_files_relative_to_subject_dir):
             print("    %d: %s" % (file_idx+1, file))
 

@@ -130,10 +130,13 @@ def download_abide_structural_files_to(local_base_dir, required_files_relative_t
 
     num_files_total = len(url_tuples)
     print("Downloading %d files in parallel using %d threads." % (num_files_total, num_in_parallel))
+    print("----- Download Start -----")
 
     Pool(num_in_parallel).map(retrieve_url, url_tuples)
 
-    print("Legend for status codes (first letter of the lines above): K=download okay, S=skipped, E=download error")
+    print("----- Download End -----")
+
+    print("Legend for download status codes (first letter of the lines above, if any): K=download okay, S=skipped, E=download error")
     print("Download finished: handled %s URLs in total (%d in parallel). Result: %d downloaded, %d existed, %d failed, %d no_filename." % (num_files_total, num_in_parallel, len(ok_files.keys()), len(skipped_files.keys()), len(error_files.keys()), num_no_filename_files))
     print("Check local directory '%s' for downloaded files. Exiting." % (local_base_dir))
 
